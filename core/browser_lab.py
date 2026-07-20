@@ -9,7 +9,9 @@ from urllib.parse import urlparse
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from core.paths import get_app_root
+
+ROOT = get_app_root()
 HOOK_SCRIPT = os.path.join(ROOT, "hooks", "crypto_hook.js")
 NETWORK_CAPTURE_SCRIPT = os.path.join(ROOT, "hooks", "network_capture.js")
 
@@ -294,6 +296,9 @@ class BrowserLabWorker(QThread):
 
     def run(self):
         import sys
+        from core.playwright_env import setup_playwright_browsers_path, has_bundled_chromium
+
+        setup_playwright_browsers_path()
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -304,6 +309,14 @@ class BrowserLabWorker(QThread):
                 f'  "{py}" -m pip install playwright\n'
                 f'  "{py}" -m playwright install chromium\n\n'
                 "完成后重启 GUI。"
+            )
+            self.stopped.emit()
+            return
+
+        if getattr(sys, "frozen", False) and not has_bundled_chromium():
+            self.log.emit(
+                "未找到内置 Chromium（ms-playwright 目录）。\n"
+                "请使用完整绿色版包，或联系发布者重新打包。"
             )
             self.stopped.emit()
             return

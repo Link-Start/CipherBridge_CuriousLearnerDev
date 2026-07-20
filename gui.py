@@ -23,12 +23,14 @@ from PyQt6.QtWidgets import (
     QMessageBox, QGridLayout, QCheckBox, QScrollArea, QTreeWidget,
     QTreeWidgetItem, QMenu, QInputDialog, QDialog, QListWidget,
     QDialogButtonBox, QFormLayout, QTextEdit, QTableWidget, QTableWidgetItem,
-    QHeaderView, QFileDialog, QToolButton,
+    QHeaderView, QFileDialog, QToolButton, QSizePolicy,
 )
 from PyQt6.QtCore import Qt, QProcess, QProcessEnvironment, pyqtSignal, QObject, QTimer
 from PyQt6.QtGui import QFont, QTextCursor, QColor, QPalette
 
-sys.path.insert(0, os.path.dirname(__file__))
+from core.paths import get_app_root
+
+sys.path.insert(0, os.path.dirname(__file__) if not getattr(sys, "frozen", False) else get_app_root())
 from algorithms import create_algorithm
 from codegen import generate_code_from_steps, parse_code_to_steps, codegen_for_pipeline, get_codegen_role
 from core.http_message import HTTP_LOG_BEGIN, HTTP_LOG_END, HTTP_LOG_BLANK
@@ -43,6 +45,7 @@ from core.home_tab import HomeTab
 from core.cert_helper import install_https_cert, is_cert_trusted, cert_status_text, auto_install_if_needed
 from core.match_dialog import MatchRulesDialog
 from core.settings_dialog import SettingsDialog
+from core.settings_tab import SettingsHubTab
 from core.project_name import normalize_project_name
 from core.project_io import (
     ProjectPackageError,
@@ -62,15 +65,22 @@ from core.theme import (
     LOG_COLORS, HTTP_LOG_COLORS, C,
 )
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+from core.paths import get_app_root
+
+PROJECT_ROOT = get_app_root()
 PROFILES_DIR = os.path.join(PROJECT_ROOT, "profiles")
 PLUGINS_DIR = os.path.join(PROJECT_ROOT, "plugins")
 MAIN_SCRIPT = os.path.join(PROJECT_ROOT, "main.py")
 
 
 def _resolve_mitmdump() -> str:
-    """优先使用当前 Python 环境中的 mitmdump."""
+    """优先使用绿色版同目录 mitmdump.exe."""
     import shutil
+    root = get_app_root()
+    for name in ("mitmdump.exe", "mitmdump"):
+        cand = os.path.join(root, name)
+        if os.path.isfile(cand):
+            return cand
     if sys.platform == "win32":
         cand = os.path.join(os.path.dirname(sys.executable), "Scripts", "mitmdump.exe")
         if os.path.isfile(cand):
@@ -246,22 +256,24 @@ class ControlPanel(QFrame):
         super().__init__(parent)
         self.setObjectName("sidebar")
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setMaximumWidth(300)
+        self.setMinimumWidth(200)
+        self.setMaximumWidth(240)
         self._last_profile = ""
         self._build_ui()
         # 仅填充下拉列表, 不触发加载 (MainWindow 初始化完成后再加载)
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(6)
 
         build_logo_header(layout)
 
         # ---- 项目选择 ----
         project_grp = QGroupBox("项目选择")
         pj_layout = QVBoxLayout(project_grp)
-        pj_layout.setSpacing(6)
+        pj_layout.setContentsMargins(6, 10, 6, 6)
+        pj_layout.setSpacing(5)
         self.profile_combo = QComboBox()
         self.profile_combo.currentTextChanged.connect(self._on_profile_changed)
         pj_layout.addWidget(self.profile_combo)
@@ -301,7 +313,8 @@ class ControlPanel(QFrame):
         # ---- 解密端 ----
         decrypt_grp = QGroupBox("解密端")
         d_layout = QVBoxLayout(decrypt_grp)
-        d_layout.setSpacing(6)
+        d_layout.setContentsMargins(6, 10, 6, 6)
+        d_layout.setSpacing(5)
         self.decrypt_status = QLabel("○ 已停止")
         style_status_label(self.decrypt_status, running=False)
         d_layout.addWidget(self.decrypt_status)
@@ -329,13 +342,13 @@ class ControlPanel(QFrame):
         d_layout.addLayout(d_btns)
         d_aux = QHBoxLayout()
         d_aux.setSpacing(6)
-        match_btn = QPushButton("匹配规则")
-        match_btn.setToolTip("指定哪些域名/路径走代理解码，可导出 PAC 分流脚本")
+        match_btn = QPushButton("规则")
+        match_btn.setToolTip("匹配规则：指定域名/路径走代理，可导出 PAC")
         match_btn.clicked.connect(self._edit_match_rules)
         style_sidebar_aux_button(match_btn)
         d_aux.addWidget(match_btn)
-        cert_btn = QPushButton("HTTPS 证书")
-        cert_btn.setToolTip("安装 mitmproxy 根证书以解密 HTTPS 流量")
+        cert_btn = QPushButton("证书")
+        cert_btn.setToolTip("安装 mitmproxy 根证书以解密 HTTPS")
         cert_btn.clicked.connect(self._install_https_cert)
         style_sidebar_aux_button(cert_btn)
         d_aux.addWidget(cert_btn)
@@ -349,7 +362,8 @@ class ControlPanel(QFrame):
 
         encrypt_grp = QGroupBox("加密端")
         e_layout = QVBoxLayout(encrypt_grp)
-        e_layout.setSpacing(6)
+        e_layout.setContentsMargins(6, 10, 6, 6)
+        e_layout.setSpacing(5)
         self.encrypt_status = QLabel("○ 已停止")
         style_status_label(self.encrypt_status, running=False)
         e_layout.addWidget(self.encrypt_status)
@@ -384,12 +398,6 @@ class ControlPanel(QFrame):
         set_btn_icon(self.decrypt_stop_btn, "stop")
         set_btn_icon(self.encrypt_start_btn, "play")
         set_btn_icon(self.encrypt_stop_btn, "stop")
-
-        settings_btn = QPushButton("设置")
-        settings_btn.clicked.connect(self._open_settings)
-        style_button(settings_btn, "ghost")
-        set_btn_icon(settings_btn, "setting", size=14)
-        layout.addWidget(settings_btn)
 
         self._update_project_ui_state()
         layout.addStretch()
@@ -572,6 +580,10 @@ class ControlPanel(QFrame):
             return []
 
     def _open_settings(self):
+        win = self.window()
+        if win is not None and hasattr(win, "open_settings_hub"):
+            win.open_settings_hub()
+            return
         dlg = SettingsDialog(self, parent=self)
         dlg.exec()
 
@@ -2918,10 +2930,12 @@ class LogTab(QWidget):
         set_btn_icon(cb, "clear")
 
     def append(self, level, msg):
-        cm=LOG_COLORS
+        cm = LOG_COLORS
+        # 日志区为深色底，用 code_fg，避免浅色主题正文色看不清
+        fg, dim = C["code_fg"], "#8b929e"
         self.log_view.appendHtml(
-            f'<span style="color:{C["text_dim"]}">[{datetime.now().strftime("%H:%M:%S")}]</span> '
-            f'<span style="color:{cm.get(level, C["text"])}">{html.escape(msg)}</span>'
+            f'<span style="color:{dim}">[{datetime.now().strftime("%H:%M:%S")}]</span> '
+            f'<span style="color:{cm.get(level, fg)}">{html.escape(msg)}</span>'
         )
         self.log_view.moveCursor(QTextCursor.MoveOperation.End)
 
@@ -2929,11 +2943,12 @@ class LogTab(QWidget):
         content = content.replace(HTTP_LOG_BLANK, "")
         label = "请求" if "[request]" in tag else "响应"
         ts = datetime.now().strftime("%H:%M:%S")
+        dim = "#8b929e"
         self.log_view.appendHtml(
             f'<div style="margin:8px 0 4px 0;">'
-            f'<span style="color:{C["text_dim"]}">[{ts}] {html.escape(label)}</span> '
-            f'<span style="color:{C["text_dim"]}">{html.escape(tag)}</span>'
-            f'<pre style="color:{C["text"]}; background:{C["input_bg"]}; padding:8px; margin:4px 0 0 0; '
+            f'<span style="color:{dim}">[{ts}] {html.escape(label)}</span> '
+            f'<span style="color:{dim}">{html.escape(tag)}</span>'
+            f'<pre style="color:{C["code_fg"]}; background:{C["code_bg"]}; padding:8px; margin:4px 0 0 0; '
             f'border:1px solid {C["border"]}; white-space:pre-wrap; '
             f'font-family:Consolas,monospace; font-size:11px;">'
             f'{html.escape(content)}</pre></div>'
@@ -2948,7 +2963,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
-        self.setMinimumSize(1200, 750); self.resize(1400, 880)
+        self.setMinimumSize(1280, 750); self.resize(1580, 780)
         self.decrypt_process = None; self.encrypt_process = None
         self._output_buffer = ""
         self._tls_warned = False
@@ -2973,25 +2988,28 @@ class MainWindow(QMainWindow):
     def _build_ui(self):
         c=QWidget(); self.setCentralWidget(c)
         s=QSplitter(Qt.Orientation.Horizontal)
-        self.control=ControlPanel(); s.addWidget(self.control)
+        self.control=ControlPanel()
+        self.control.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        s.addWidget(self.control)
         self.tabs=QTabWidget()
         setup_main_tabs(self.tabs)
         self.home_tab=HomeTab()
         self.tabs.addTab(self.home_tab, icon("home", tint=C["accent"]), "主页")
+        self.ai_lab_tab=AILabTab()
+        self.tabs.addTab(self.ai_lab_tab, icon("code", tint=C["accent"]), "AI自动化分析")
         self.parser_tab=RequestParserTab()
         self.tabs.addTab(self.parser_tab, icon("upload", tint=C["accent"]), "请求解析器")
         self.visual_builder_tab=VisualBuilderTab()
         self.tabs.addTab(self.visual_builder_tab, icon("builder", tint=C["teal"]), "可视化构建器")
-        self.ai_lab_tab=AILabTab()
-        self.tabs.addTab(self.ai_lab_tab, icon("code", tint=C["accent"]), "AI自动化分析")
         self.plugin_editor_tab=ExtensionEditorTab()
         self.tabs.addTab(self.plugin_editor_tab, icon("plugin", tint=C["purple"]), "插件编辑器")
         self.analyzer_tab=CryptoAnalyzerTab()
-        self.tabs.addTab(self.analyzer_tab, icon("analyzer", tint=C["warn"]), "加密分析")
         self.crypto_tab=CryptoTab()
-        self.tabs.addTab(self.crypto_tab, icon("test", tint=C["primary"]), "加解密测试")
         self.log_tab=LogTab()
-        self.tabs.addTab(self.log_tab, icon("log"), "日志")
+        self.settings_hub_tab=SettingsHubTab(
+            self.control, self.analyzer_tab, self.crypto_tab, self.log_tab,
+        )
+        self.tabs.addTab(self.settings_hub_tab, icon("setting", tint=C["accent"]), "设置")
         self.home_tab.bind_tabs(self.tabs, {
             "parser": self.parser_tab,
             "builder": self.visual_builder_tab,
@@ -3000,21 +3018,29 @@ class MainWindow(QMainWindow):
             "crypto": self.crypto_tab,
             "ai": self.ai_lab_tab,
             "log": self.log_tab,
+            "settings": self.settings_hub_tab,
         })
-        s.addWidget(self.tabs); s.setSizes([300, 1100])
+        s.addWidget(self.tabs); s.setSizes([220, 1180])
+        s.setStretchFactor(0, 0)
+        s.setStretchFactor(1, 1)
         ml=QHBoxLayout(c); ml.setContentsMargins(0,0,0,0); ml.addWidget(s)
+
+    def open_settings_hub(self, page: int | None = None) -> None:
+        """打开设置中心；page 见 SettingsHubTab.PAGE_*."""
+        self.tabs.setCurrentWidget(self.settings_hub_tab)
+        if page is None:
+            page = SettingsHubTab.PAGE_GENERAL
+        self.settings_hub_tab.show_page(page)
 
     def refresh_tab_icons(self) -> None:
         """主题切换后刷新 Tab 图标着色."""
         specs = [
             (0, icon("home", tint=C["accent"])),
-            (1, icon("upload", tint=C["accent"])),
-            (2, icon("builder", tint=C["teal"])),
-            (3, icon("code", tint=C["accent"])),
+            (1, icon("code", tint=C["accent"])),
+            (2, icon("upload", tint=C["accent"])),
+            (3, icon("builder", tint=C["teal"])),
             (4, icon("plugin", tint=C["purple"])),
-            (5, icon("analyzer", tint=C["warn"])),
-            (6, icon("test", tint=C["primary"])),
-            (7, icon("log")),
+            (5, icon("setting", tint=C["accent"])),
         ]
         for idx, ic in specs:
             if idx < self.tabs.count():
@@ -3209,7 +3235,7 @@ class MainWindow(QMainWindow):
                 self._tls_warned = True
                 log_signal.append_log.emit(
                     "WARNING",
-                    "HTTPS 证书未信任 → 左侧「设置」中安装证书后重启浏览器",
+                    "HTTPS 证书未信任 → 顶部「设置」选项卡中安装证书后重启浏览器",
                 )
             log_signal.append_log.emit("INFO", f"[{tag}] {line.strip()}")
 

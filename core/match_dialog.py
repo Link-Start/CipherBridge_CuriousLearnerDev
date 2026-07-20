@@ -11,8 +11,9 @@ from PyQt6.QtWidgets import (
 
 from core.pac_generator import generate_pac
 from core.profile_match import load_match_rules, regenerate_plugin_with_match, save_match_rules
+from core.paths import get_app_root
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = get_app_root()
 PROFILES_DIR = os.path.join(ROOT, "profiles")
 
 _METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD")

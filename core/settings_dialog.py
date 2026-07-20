@@ -29,8 +29,8 @@ class SettingsDialog(QDialog):
         form = QFormLayout()
 
         self.theme_combo = QComboBox()
+        self.theme_combo.addItem("浅色（白色）", "light")
         self.theme_combo.addItem("深色", "dark")
-        self.theme_combo.addItem("浅色", "light")
         configure_combo_popup(self.theme_combo)
         current = get_theme()
         idx = self.theme_combo.findData(current)

@@ -8,11 +8,12 @@ import logging
 import importlib.util
 
 from core.match_rules import matches_request
+from core.paths import get_app_root
 
 logger = logging.getLogger(__name__)
 
-PROFILES_DIR = os.path.join(os.path.dirname(__file__), "..", "profiles")
-PLUGINS_DIR = os.path.join(os.path.dirname(__file__), "..", "plugins")
+PROFILES_DIR = os.path.join(get_app_root(), "profiles")
+PLUGINS_DIR = os.path.join(get_app_root(), "plugins")
 
 
 class PluginLoader:

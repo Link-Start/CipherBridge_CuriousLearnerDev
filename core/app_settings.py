@@ -6,7 +6,9 @@ import os
 
 import yaml
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from core.paths import get_app_root
+
+ROOT = get_app_root()
 SETTINGS_PATH = os.path.join(ROOT, "config", "settings.yaml")
 
 _DEFAULTS = {

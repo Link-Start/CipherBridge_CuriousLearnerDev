@@ -14,8 +14,9 @@ except ImportError:
     _HAS_SVG = False
 
 from core.theme import C
+from core.paths import get_app_root
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = get_app_root()
 IMG_DIR = os.path.join(ROOT, "img")
 ICON_DIR = os.path.join(IMG_DIR, "icons")
 MAIN_ICON = os.path.join(IMG_DIR, "main.jpg")
@@ -111,7 +112,15 @@ def app_icon() -> QIcon:
 
 def set_btn_icon(btn, name: str, size: int = 16, light: bool = False, tint: str | None = None):
     """为按钮设置图标（主要操作按钮）."""
-    ic = icon(name, size, light=light, tint=tint or C["text"])
+    if tint is None:
+        variant = btn.property("variant") or ""
+        if variant == "primary":
+            tint = C.get("primary_fg", C["text"])
+        elif variant == "accent":
+            tint = C.get("accent_fg", C["text"])
+        else:
+            tint = C["text"]
+    ic = icon(name, size, light=light, tint=tint)
     if ic.isNull():
         btn.setIcon(QIcon())
         return

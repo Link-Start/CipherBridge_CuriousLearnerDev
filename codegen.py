@@ -5,7 +5,9 @@ import re
 
 import yaml
 
-_ROOT = os.path.dirname(os.path.abspath(__file__))
+from core.paths import get_app_root
+
+_ROOT = get_app_root()
 _PROFILES_DIR = os.path.join(_ROOT, "profiles")
 
 from core.brand import APP_TITLE

@@ -17,8 +17,8 @@
 
 ## 🚀 核心特性
 
-- ✍️ AI 自动生成 mitmdump 插件代码
 - 🔐 可视化配置 AES / DES / 3DES / SM4 / RSA 等加解密流程
+- ✍️ 自动生成 mitmdump 插件代码
 - 🌉 Burp Suite 双向加解密桥接
 - 🧩 支持扩展自定义 Python 函数
 - 🤖 浏览器 Hook + AI 自动分析生成脚本
@@ -42,7 +42,7 @@ cd CipherBridge
 
 pip install -r requirements.txt
 
-# AI 自动化分析使用浏览器采集时需要（可选）
+# AI 自动化分析使用浏览器采集时需要
 playwright install chromium
 ```
 
@@ -69,7 +69,9 @@ python gui.py
 
 点击「启动」后会打开浏览器，自动采集页面 JS 以及请求/响应数据，并尝试按内置规则匹配加解密方式。若规则未匹配成功，可使用 AI 辅助分析。
 
-![AI 自动化分析 — 启动浏览器](https://zssnp-1301606049.cos.ap-nanjing.myqcloud.com/img/image-20260616104243352.png)
+![](https://zssnp-1301606049.cos.ap-nanjing.myqcloud.com/img/image-20260720164423103.png)
+
+![](https://zssnp-1301606049.cos.ap-nanjing.myqcloud.com/img/image-20260616104243352.png)
 
 默认不启用 AI 时，会先按内置规则识别使用的加解密算法：
 
@@ -214,6 +216,15 @@ profiles/              # 项目配置
 plugins/               # 各项目生成的插件
 hooks/                 # 浏览器 Hook 脚本（AI 自动化分析）
 ```
+
+## 安全提示
+
+本工具用于**本地安全测试与逆向分析**，请勿在未授权环境使用。
+
+- mitmdump 默认 `--ssl-insecure`，会解密 HTTPS 流量
+- `extensions/` 下的自定义代码会被动态加载执行
+- 勿将含真实密钥的项目包（`.cbproj.zip`）提交到公开仓库
+
 
 
 ## 免责声明

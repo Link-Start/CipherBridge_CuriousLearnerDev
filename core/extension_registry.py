@@ -8,7 +8,9 @@ import sys
 import traceback
 from typing import Any, Callable
 
-EXTENSIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "extensions")
+from core.paths import get_app_root
+
+EXTENSIONS_DIR = os.path.join(get_app_root(), "extensions")
 _REGISTRY: dict[str, dict[str, Any]] = {}
 _LOADED_FILES: dict[str, float] = {}
 

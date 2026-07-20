@@ -155,6 +155,26 @@ class HomeTab(QWidget):
         target = self._routes.get(key)
         if target is None or self._tab_widget is None:
             return
+        # 嵌套在「设置」中心内的页面
+        nested = {
+            "analyzer": ("settings", 1),
+            "crypto": ("settings", 2),
+            "log": ("settings", 3),
+        }
+        if key in nested:
+            settings = self._routes.get("settings")
+            page = nested[key][1]
+            win = self.window()
+            if win is not None and hasattr(win, "open_settings_hub"):
+                win.open_settings_hub(page)
+                return
+            if settings is not None:
+                idx = self._tab_widget.indexOf(settings)
+                if idx >= 0:
+                    self._tab_widget.setCurrentIndex(idx)
+                    if hasattr(settings, "show_page"):
+                        settings.show_page(page)
+                return
         idx = self._tab_widget.indexOf(target)
         if idx >= 0:
             self._tab_widget.setCurrentIndex(idx)

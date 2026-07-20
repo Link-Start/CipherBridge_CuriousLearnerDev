@@ -5,7 +5,9 @@ from __future__ import annotations
 import os
 import yaml
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from core.paths import get_app_root
+
+ROOT = get_app_root()
 AI_CONFIG_PATH = os.path.join(ROOT, "config", "ai.yaml")
 
 DEFAULT = {
@@ -20,6 +22,7 @@ DEFAULT = {
         "headless": False,
         "use_mitm_proxy": False,
         "mitm_port": 8080,
+        "last_url": "",
     },
 }
 

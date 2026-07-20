@@ -11,8 +11,9 @@ import yaml
 
 from codegen import generate_code_from_steps
 from core.project_name import normalize_project_name
+from core.paths import get_app_root
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = get_app_root()
 PROFILES_DIR = os.path.join(ROOT, "profiles")
 PLUGINS_DIR = os.path.join(ROOT, "plugins")
 

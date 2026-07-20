@@ -8,8 +8,9 @@ import os
 import yaml
 
 from codegen import codegen_for_pipeline, parse_code_to_steps
+from core.paths import get_app_root
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = get_app_root()
 PROFILES_DIR = os.path.join(ROOT, "profiles")
 PLUGINS_DIR = os.path.join(ROOT, "plugins")
 
