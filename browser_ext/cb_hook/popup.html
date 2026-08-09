@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>CipherBridge</title>
+  <style>
+    :root {
+      --bg: #1e1f22;
+      --surface: #2b2d30;
+      --border: #45484c;
+      --text: #bcbec4;
+      --dim: #8a8f98;
+      --primary: #3574f0;
+      --ok: #499c54;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 280px;
+      font: 12px/1.45 "Segoe UI", "Microsoft YaHei UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    h1 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .sub {
+      margin-top: 3px;
+      color: var(--dim);
+      font-size: 11px;
+    }
+    .master {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .master label { font-weight: 600; }
+    .sw {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .sw input { opacity: 0; width: 0; height: 0; }
+    .sw i {
+      position: absolute;
+      inset: 0;
+      background: #3c3f41;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .sw i::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+    .sw input:checked + i { background: var(--primary); }
+    .sw input:checked + i::after { transform: translateX(16px); }
+    .note {
+      padding: 10px 14px 12px;
+      color: var(--dim);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+    footer {
+      padding: 10px 14px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.08); }
+    #msg { flex: 1; color: var(--ok); font-size: 11px; min-height: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CipherBridge Hook</h1>
+    <div class="sub">密钥 Hook 由密桥启动时注入 · 刷新页面生效</div>
+  </header>
+
+  <div class="master">
+    <label for="cbEnabled">启用页面注入</label>
+    <label class="sw"><input type="checkbox" id="cbEnabled" checked /><i></i></label>
+  </div>
+
+  <p class="note">
+    默认注入密钥 Hook。反调试 / CDP / 响应改写请在密桥 GUI「注入」菜单按需开启。
+  </p>
+
+  <footer>
+    <button type="button" class="primary" id="btnSave">保存</button>
+    <button type="button" id="btnReset">恢复默认</button>
+    <div id="msg"></div>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>
